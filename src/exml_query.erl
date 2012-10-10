@@ -5,7 +5,7 @@
 %%%-------------------------------------------------------------------
 -module(exml_query).
 
--include("exml.hrl").
+-include("exml_stream.hrl").
 
 -export([path/2, path/3]).
 -export([paths/2]).
@@ -74,12 +74,19 @@ subelements(#xmlelement{children = Children}, Name) ->
 cdata(#xmlelement{children = Children}) ->
     list_to_binary([exml:unescape_cdata(C) || #xmlcdata{} = C <- Children]).
 
--spec attr(#xmlelement{}, binary()) -> binary() | undefined.
+-spec attr(#xmlelement{} | #xmlstreamstart{}, binary()) -> binary() | undefined.
 attr(Element, Name) ->
     attr(Element, Name, undefined).
 
--spec attr(#xmlelement{}, binary(), Other) -> binary() | Other.
+-spec attr(#xmlelement{} | #xmlstreamstart{}, binary(), Other) -> binary() | Other.
 attr(#xmlelement{attrs = Attrs}, Name, Default) ->
+    case lists:keyfind(Name, 1, Attrs) of
+        {Name, Value} ->
+            Value;
+        false ->
+            Default
+    end;
+attr(#xmlstreamstart{attrs = Attrs}, Name, Default) ->
     case lists:keyfind(Name, 1, Attrs) of
         {Name, Value} ->
             Value;
