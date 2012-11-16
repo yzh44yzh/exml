@@ -10,7 +10,6 @@
 
 -export([load/0]).
 -export([new_parser/0, reset_parser/1, free_parser/1, parse/2, parse_final/2]).
-
 -on_load(load/0).
 
 -spec load() -> any().
@@ -23,7 +22,7 @@ load() ->
                   Path ->
                       Path
               end,
-    erlang:load_nif(filename:join(PrivDir, "exml"), none).
+    erlang:load_nif(filename:join(PrivDir, "exml_event"), none).
 
 -spec new_parser() -> term().
 new_parser() ->
@@ -56,4 +55,4 @@ do_parse(Parser, Data, Final) ->
 
 -spec parse_nif(term(), binary(), integer()) -> list().
 parse_nif(_Parser, _Data, _Final) ->
-    throw({?MODULE, nif_not_loaded}).
+     throw({?MODULE, nif_not_loaded}).

@@ -96,7 +96,6 @@ static void *character_data_handler(expat_parser *parser_data, const XML_Char *s
 
 static void *namespace_decl_handler(expat_parser *parser_data, const XML_Char *prefix, const XML_Char *uri)
 {
-    ErlNifBinary ns_prefix_bin, ns_uri_bin;
     ERL_NIF_TERM ns_prefix, ns_uri, ns_pair;
 
     if(uri == NULL)
@@ -107,18 +106,14 @@ static void *namespace_decl_handler(expat_parser *parser_data, const XML_Char *p
         }
 
     if(prefix)
-        {
-            enif_alloc_binary(strlen(prefix), &ns_prefix_bin);
-            strcpy((char *)ns_prefix_bin.data, (const char *)prefix);
-            ns_prefix = enif_make_binary(parser_data->env, &ns_prefix_bin);
-        } else
-        {
-            ns_prefix = NONE;
-        }
+    {
+      ns_prefix = ns_binary((const char*) prefix);
+    } else
+    {
+      ns_prefix = NONE;
+    }
 
-    enif_alloc_binary(strlen(uri), &ns_uri_bin);
-    strcpy((char *)ns_uri_bin.data, uri);
-    ns_uri = enif_make_binary(parser_data->env, &ns_uri_bin);
+    ns_uri = ns_binary((const char*) uri);
 
     ns_pair = enif_make_tuple(parser_data->env, 2, ns_uri, ns_prefix);
     parser_data->xmlns = enif_make_list_cell(parser_data->env, ns_pair, parser_data->xmlns);

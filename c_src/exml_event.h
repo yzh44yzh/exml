@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include "exml_ns.h"
 
 static XML_Memory_Handling_Suite ms =
     {enif_alloc, enif_realloc, enif_free};

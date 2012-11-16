@@ -2,8 +2,9 @@
  [
   {description, "XML parsing library"},
   {vsn, git},
-  {registered, []},
+  {registered, [exml_sup, exml_gc]},
   {applications, [kernel,
                   stdlib]},
-  {env, []}
+  {env, []},
+  {mod, {exml_app, []}}
  ]}.
