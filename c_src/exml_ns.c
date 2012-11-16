@@ -1,6 +1,7 @@
 #include "exml_ns.h"
 
 static ErlNifEnv* ns_env = NULL;
+static ErlNifMutex* ns_mutex = NULL;
 static ns_list* namespaces = NULL;
 
 static ns_list* ns_lookup(const char* ns)
@@ -32,7 +33,7 @@ static ns_list* ns_put(const char* ns)
 static void ns_remove(ns_list* removed)
 {
     ns_list* prev;
-    if(removed != NULL && enif_free_refc_binary(removed->term) == 0)
+    if(removed != NULL && enif_release_refc_binary(removed->term) == 0)
     {
         if(removed == namespaces)
         {
@@ -54,11 +55,18 @@ static void ns_remove(ns_list* removed)
 
 ERL_NIF_TERM ns_binary(const char* ns)
 {
-    ns_list* bin = ns_lookup(ns);
+    ns_list* bin;
     if(ns_env == NULL)
         ns_env = enif_alloc_env();
+    if(ns_mutex == NULL)
+        ns_mutex = enif_mutex_create("ns");
+
+    enif_mutex_lock(ns_mutex);
+    bin = ns_lookup(ns);
     if(bin == NULL)
         bin = ns_put(ns);
+    enif_mutex_unlock(ns_mutex);
+
     return bin->term;
 };
 
@@ -66,6 +74,11 @@ int ns_cleanup()
 {
     int cleans = 0;
     ns_list* cur;
+    
+    if(ns_mutex == NULL)
+        ns_mutex = enif_mutex_create("ns");
+
+    enif_mutex_lock(ns_mutex);
     for(cur = namespaces; cur != NULL; cur = cur->next)
     {
         if(enif_binary_get_refc(cur->term) == 1) {
@@ -73,5 +86,7 @@ int ns_cleanup()
             ns_remove(cur);
         }
     }
+    enif_mutex_unlock(ns_mutex);
+
     return cleans;
 };
