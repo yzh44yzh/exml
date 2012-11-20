@@ -256,6 +256,7 @@ static int upgrade(ErlNifEnv* env, void** priv, void** old_priv, ERL_NIF_TERM in
 
 static void unload(ErlNifEnv* env, void* priv)
 {
+    ns_release();
 }
 
 static ErlNifFunc funcs[] =

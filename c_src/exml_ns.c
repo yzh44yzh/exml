@@ -30,24 +30,15 @@ static ns_list* ns_put(const char* ns)
     return new; 
 };
 
-static void ns_remove(ns_list* removed)
+static void ns_remove(ns_list* prev, ns_list* removed)
 {
-    ns_list* prev;
     if(removed != NULL && enif_release_refc_binary(removed->term) == 0)
     {
-        if(removed == namespaces)
-        {
+        if(prev == NULL)
             namespaces = removed->next;
-        }
-        else {
-            for(prev = namespaces; prev->next != NULL; prev = prev->next) {
-                if(prev->next == removed)
-                {
-                    prev->next = removed->next;
-                    break;
-                }
-            }
-        }
+        else 
+            prev->next = removed->next;
+
         free(removed->key);
         free(removed);
     }
@@ -73,20 +64,35 @@ ERL_NIF_TERM ns_binary(const char* ns)
 int ns_cleanup()
 {
     int cleans = 0;
-    ns_list* cur;
+    ns_list *cur, *prev;
     
     if(ns_mutex == NULL)
         ns_mutex = enif_mutex_create("ns");
 
     enif_mutex_lock(ns_mutex);
-    for(cur = namespaces; cur != NULL; cur = cur->next)
+    for(prev = NULL, cur = namespaces; cur != NULL; cur = cur->next)
     {
         if(enif_binary_get_refc(cur->term) == 1) {
             cleans++;
-            ns_remove(cur);
+            ns_remove(prev, cur);
+        }
+        else {
+            prev = cur;
         }
     }
     enif_mutex_unlock(ns_mutex);
 
     return cleans;
+};
+
+void ns_release()
+{
+    ns_list *cur;
+    for(cur = namespaces; cur != NULL; cur = cur->next)
+        ns_remove(NULL, cur);
+
+    if(ns_mutex != NULL)
+        enif_mutex_destroy(ns_mutex);
+    if(ns_env != NULL)
+        enif_clear_env(ns_env);
 };

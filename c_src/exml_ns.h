@@ -9,6 +9,7 @@
 
 ERL_NIF_TERM ns_binary(const char*);
 int ns_cleanup();
+void ns_release();
 
 typedef struct ns_list {
     struct ns_list* next;
